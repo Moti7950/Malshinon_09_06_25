@@ -69,36 +69,42 @@ namespace Malshinon_09_06_25
             }
         }
         //same fanc like Get by name!!
-        public bool GetPersonBySecretCode(string secret_code)
+        public (string FirstName, string LastName)? GetPersonBySecretCode(string secret_code)
         {
-            string query ="SELECT * FROM people WHERE secret_code =@secret_code";
+            string query = "SELECT first_name, last_name FROM people WHERE secret_code = @secret_code";
             try
             {
-                _conn.Open();
+                if (_conn.State != ConnectionState.Open)
+                    _conn.Open();
+
                 MySqlCommand cmd = new MySqlCommand(query, _conn);
                 cmd.Parameters.AddWithValue("@secret_code", secret_code);
+
                 using (MySqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        return true;
+                        string firstName = reader.GetString("first_name");
+                        string lastName = reader.GetString("last_name");
+                        return (firstName, lastName);
                     }
                     else
                     {
-                        return false;
+                        return null; // לא נמצא משתמש עם הקוד הזה
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Catch" + e.Message);
-                return false;
+                Console.WriteLine("❌ Error: " + e.Message);
+                return null;
             }
             finally
             {
                 _conn.Close();
             }
         }
+
         public void GetReporterStats()
         {
             List<PeopleDB> GetStatus = new List<PeopleDB>();
@@ -144,7 +150,6 @@ namespace Malshinon_09_06_25
             }
 
         }
-
         public void GetTargetStats()
         {
             try
@@ -225,6 +230,124 @@ namespace Malshinon_09_06_25
                 _conn.Close();
             }
         }
+        public int GetPersonIdByName(string firstName, string lastName)
+        {
+            int id = -1;
+            string query = "SELECT id FROM people WHERE first_name = @firstName AND last_name = @lastName";
+
+            try
+            {
+                if (_conn.State != ConnectionState.Open)
+                    _conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(query, _conn);
+                cmd.Parameters.AddWithValue("@firstName", firstName);
+                cmd.Parameters.AddWithValue("@lastName", lastName);
+
+                object result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    id = Convert.ToInt32(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in GetPersonIdByName: " + ex.Message);
+            }
+            finally
+            {
+                _conn.Close();
+            }
+
+            return id;
+        }
+        public int GetPersonIdBySecretCode(string secretCode)
+        {
+            int id = -1;
+            string query = "SELECT id FROM people WHERE secret_code = @code";
+
+            try
+            {
+                if (_conn.State != System.Data.ConnectionState.Open)
+                    _conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(query, _conn);
+                cmd.Parameters.AddWithValue("@code", secretCode);
+
+                object result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    id = Convert.ToInt32(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error in GetPersonIdBySecretCode: " + ex.Message);
+            }
+            finally
+            {
+                _conn.Close();
+            }
+
+            return id;
+        }
+        public string GetSecretCodeByName(string firstName, string lastName)
+        {
+            string code = "";
+            string query = "SELECT first_name, last_name ,secret_code FROM people WHERE first_name = @f AND last_name = @l";
+
+            try
+            {
+                if (_conn.State != System.Data.ConnectionState.Open)
+                    _conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(query, _conn);
+                cmd.Parameters.AddWithValue("@f", firstName);
+                cmd.Parameters.AddWithValue("@l", lastName);
+
+                object result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    code = result.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error getting secret code: " + ex.Message);
+            }
+            finally
+            {
+                _conn.Close();
+            }
+
+            return code;
+        }
+        public string GetUserNameBySecretCode(string secretCode)
+        {
+            string fullName = "";
+            string query = "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM people WHERE secret_code = @code";
+            try
+            {
+                if (_conn.State != System.Data.ConnectionState.Open)
+                    _conn.Open();
+                MySqlCommand cmd = new MySqlCommand(query, _conn);
+                cmd.Parameters.AddWithValue("@code", secretCode);
+                object result = cmd.ExecuteScalar();
+                if (result != null)
+                {
+                    fullName = result.ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error getting user name: " + ex.Message);
+            }
+            finally
+            {
+                _conn.Close();
+            }
+            return fullName;
+        }
         public void InsertNewPerson(PeopleDB addPerson)
         {
             string query = "INSERT INTO people (first_name, last_name, secret_code, num_mentions, num_reports, type) " +
@@ -256,7 +379,6 @@ namespace Malshinon_09_06_25
                 _conn.Close();
             }
         }
-
         public void InsertIntelReport(IntelreportsDB addIntel)//!! בדיקה על קבלת האיש המדווח
         {//int reporter_id, int target_id, string text, string timestamp
             string query = "INSERT INTO intelreports (reporter_id, target_id, text, timestamp) " +

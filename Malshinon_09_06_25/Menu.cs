@@ -9,7 +9,15 @@ namespace Malshinon_09_06_25
 {
     internal class Menu
     {
+
         private DAL _StartRunCode = new DAL("malshinon");
+        private bool IsCapitalized(string word)
+        {
+            return !string.IsNullOrEmpty(word) &&
+                   char.IsUpper(word[0]) &&
+                   word.Skip(1).All(c => char.IsLower(c) || !char.IsLetter(c));
+        }
+
         public Menu()
         {
             //Console.WriteLine(_StartRunCode.GetPersonByName("David", "Levi"));
@@ -31,47 +39,78 @@ namespace Malshinon_09_06_25
 
             return new List<string> { firstName, lastName };
         }
+        public List<string> ExtractFullNameFromText(string text)
+        {
+            string[] words = text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+
+            for (int i = 0; i < words.Length - 1; i++)
+            {
+                string word1 = words[i].Trim(new char[] { '.', ',', ';', '!', '?' });
+                string word2 = words[i + 1].Trim(new char[] { '.', ',', ';', '!', '?' });
+
+                if (IsCapitalized(word1) && IsCapitalized(word2))
+                {
+                    return new List<string> { word1, word2 }; // מצאנו שם פרטי ומשפחה
+                }
+            }
+
+            return new List<string> { "", "" }; // לא נמצא
+        }
 
         public void HandleAndSendReport(string inputSecretCode)
         {
-            // יצירת הדיווח הזמני
-            Console.WriteLine("Enter reporter ID:");
-            int reporterId = int.Parse(Console.ReadLine());
-
-            Console.WriteLine("Enter target ID:");
-            int targetId = int.Parse(Console.ReadLine());
-
-            Console.WriteLine("Enter report text:");
+            // 1. קבלת טקסט חופשי מהמשתמש
+            Console.WriteLine("Enter full report text:");
             string text = Console.ReadLine();
 
-            TempReport report = new TempReport(reporterId, targetId, text);
+            // 2. חילוץ השם מהטקסט (שתי מילים שמתחילות באות גדולה)
+            List<string> nameParts = ExtractFullNameFromText(text);
+            string firstName = nameParts[0];
+            string lastName = nameParts[1];
 
-            // ניתוח - לדוגמה:
-            //if (text.Length < 5)
-            //{
-            //    Console.WriteLine("Text too short, not saving.");
-            //    return;
-            //}
+            // בדיקה אם הצלחנו לחלץ שם
+            if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
+            {
+                Console.WriteLine("❌ Could not extract a full name from the report.");
+                return;
+            }
 
-            // שליחה ל־DB
+            // 3. קבלת מזהים מה־DB
+            int reporterId = _StartRunCode.GetPersonIdBySecretCode(inputSecretCode);
+            int targetId = _StartRunCode.GetPersonIdByName(firstName, lastName);
+
+            if (reporterId == -1)
+            {
+                Console.WriteLine("❌ Reporter not found.");
+                return;
+            }
+
+            if (targetId == -1)
+            {
+                Console.WriteLine($"❌ Target '{firstName} {lastName}' not found.");
+                return;
+            }
+
+            // 4. הכנסת הדיווח
             _StartRunCode.InsertIntelReport(new IntelreportsDB(
-                report.reporter_id,
-                report.target_id,
-                report.text,
+                reporterId,
+                targetId,
+                text,
                 DateTime.Now.ToString("yyyy-MM-dd HH:mm")
             ));
 
-            Console.WriteLine("✔ Report saved.");
+            Console.WriteLine($"Report saved. Target: {firstName} {lastName} (ID: {targetId})");
         }
 
-        public bool doesTheUserExist(string userExist)
+
+        public bool doesTheUserExist(string userExist, string inputUserName)
         {
             //צריך לבדוק איך להכניס נכון את הפרטים בשביל להשתמש במערכות לדוגמא רווח יפריד את השם הפרטי והשם המשפחה
             switch (userExist)
             {
                 case "1":
-                    Console.WriteLine("Please enter your name: ");
-                    string inputUserName = Console.ReadLine();
+
                     //שימוש במתודה של חילוק הרשימה לשם פרטי ושם משפחה
                     List<string> nameParts = SplitBySpace(inputUserName);
                     string firstName = nameParts[0];
@@ -79,8 +118,6 @@ namespace Malshinon_09_06_25
 
                     if (_StartRunCode.GetPersonByName(firstName, lastName))
                     {
-                        //בחירת מטרה לפי שם או קוד שים לב יש פה חזרתיות בקוד!!!
-                        Console.WriteLine($"Welcome {firstName} {lastName}");
                         // קריאה לפונקציה של קבלת נתונים מהמשתמש
                         return true;
                     }
@@ -90,7 +127,7 @@ namespace Malshinon_09_06_25
                         Console.WriteLine("No user found!");
                         return false;
                     }
-                    
+
                 case "2":
                     //לבדוק למה יצרתי את ההדפסה הזו לבדוק למה לא הכניס שם משפחה
                     Console.WriteLine("Please enter your secret code: ");
@@ -102,39 +139,115 @@ namespace Malshinon_09_06_25
                     Console.WriteLine("Please enter a valid value!");
                     return false;
 
-            } 
+            }
         }
         public void startMenu()
         {
             // יצירת חיבור לנתונים כרגע נוצר חיבור אוטמטי יש צורך במערכת חכמה של סיסמאות ולאיפה להתחבר לשרת
             _StartRunCode.Access_TO_DB();
             _StartRunCode.GetTargetStats();
-            Console.WriteLine(" ╔══════════════════════════════╗");
-            Console.WriteLine(" ║  Please select your choce    ║");
-             Console.WriteLine(" ║           1. name:           ║");
-             Console.WriteLine(" ║          2. secret code:     ║");
-             Console.WriteLine(" ╚══════════════════════════════╝");
-            string typeConect = Console.ReadLine();
-            if (!doesTheUserExist(typeConect))
+            bool boli = true;
+            while (boli)
             {
-                //לא צריך לבצע הדפסה כפולה 
-                Console.WriteLine("Please enter your name ");
-                string inputUserNameNotExist = Console.ReadLine();
-                //שימוש במחלקה לחילוק הרשימה לשם פרטי ושם משפחה
-                List<string> nameParts = SplitBySpace(inputUserNameNotExist);
-                string firstName = nameParts[0];
-                string lastName = nameParts[1];
-                //יצירת המשתמש 
-                PeopleDB craiteNweUser = new PeopleDB(firstName, lastName);
-                _StartRunCode.InsertNewPerson(craiteNweUser);
-            }
-            else if (doesTheUserExist(typeConect))
-            {
-                Console.WriteLine("Please enter your secret code ");
-                string inputSecretCode = Console.ReadLine();
-                HandleAndSendReport(inputSecretCode);
-            }
+                Console.WriteLine(" ╔══════════════════════════════╗");
+                Console.WriteLine(" ║  Please select your choce    ║");
+                Console.WriteLine(" ║          1. name:            ║");
+                Console.WriteLine(" ║          2. secret code:     ║");
+                Console.WriteLine(" ║          3. Exit:            ║");
+                Console.WriteLine(" ╚══════════════════════════════╝");
 
+                string typeConect = Console.ReadLine();
+
+                if (typeConect == "3")
+                {
+                    Console.WriteLine("Goodbye!");
+                    boli = false;
+                }
+                else if (typeConect == "1")
+                {
+                    Console.WriteLine("Please enter your first and last name: ");
+                    string inputUserName = Console.ReadLine();
+
+                    if (!doesTheUserExist(typeConect, inputUserName))
+                    {
+                        //לא צריך לבצע הדפסה כפולה 
+                        //Console.WriteLine("Please enter your first and last name to create a new user. ");
+                        //string inputUserNameNotExist = Console.ReadLine();
+                        //שימוש במחלקה לחילוק הרשימה לשם פרטי ושם משפחה
+                        List<string> nameParts = SplitBySpace(inputUserName);
+                        string firstName = nameParts[0];
+                        string lastName = nameParts[1];
+                        //יצירת המשתמש 
+                        PeopleDB craiteNweUser = new PeopleDB(firstName, lastName);
+                        //הכנסת המשתמש החדש ל DB 
+                        _StartRunCode.InsertNewPerson(craiteNweUser);
+                    }
+                    else if (doesTheUserExist(typeConect, inputUserName))
+                    {
+                        List<string> nameParts = SplitBySpace(inputUserName);
+                        string firstName = nameParts[0];
+                        string lastName = nameParts[1];
+
+                        Console.WriteLine($"Welcome {firstName} {lastName}");
+
+                        // שליפת הקוד הסודי של המשתמש מתוך ה-DB
+                        string secretCode = _StartRunCode.GetSecretCodeByName(firstName, lastName);
+                        //_StartRunCode.UpdateReportCount();
+                        //_StartRunCode.UpdateMentionCount();
+
+                        if (string.IsNullOrEmpty(secretCode))
+                        {
+                            Console.WriteLine("❌ Could not find your secret code in the system.");
+                        }
+                        else
+                        {
+                            HandleAndSendReport(secretCode);
+                        }
+                    }
+                }
+                else if (typeConect == "2")
+                {
+                    Console.WriteLine("Please enter your secret code:");
+                    string secretCode = Console.ReadLine();
+
+                    if (!doesTheUserExist(typeConect, secretCode))
+                    {
+                        List<string> nameParts = SplitBySpace(secretCode);
+                        if (nameParts.Count < 2)
+                        {
+                            Console.WriteLine("❌ Please enter both first and last name.");
+                            return;
+                        }
+                        string firstName = nameParts[0];
+                        string lastName = nameParts[1];
+
+                        PeopleDB createNewUser = new PeopleDB(firstName, lastName);
+                        _StartRunCode.InsertNewPerson(createNewUser);
+                    }
+
+                    else
+                    {
+                        var person = _StartRunCode.GetPersonBySecretCode(secretCode);
+
+                        if (person == null)
+                        {
+                            Console.WriteLine("❌ Could not find a person with this secret code.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"✅ Welcome back, {person.Value.FirstName} {person.Value.LastName}!");
+                            HandleAndSendReport(secretCode);
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Invalid choice. Please select 1, 2, or 3.");
+                }
+
+            }
         }
     }
 }
+
+
