@@ -10,6 +10,10 @@ namespace Malshinon_09_06_25
     {
         static void Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Menu start = new Menu();
+            start.startMenu();
+
         }
     }
 }
