@@ -10,9 +10,10 @@ namespace Malshinon_09_06_25
     {
         static void Main(string[] args)
         {
-            DAL StartRunCode = new DAL("malshinon");
-            StartRunCode.Access_TO_DB();
-            Console.WriteLine(StartRunCode.GetPersonByName("David", "Levi"));
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Menu start = new Menu();
+            start.startMenu();
+
         }
     }
 }

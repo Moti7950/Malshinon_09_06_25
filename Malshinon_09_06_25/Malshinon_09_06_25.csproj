@@ -96,9 +96,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAL.cs" />
-    <Compile Include="PeopleCreate.cs" />
+    <Compile Include="Menu.cs" />
+    <Compile Include="DB\IntelreportsDB.cs" />
+    <Compile Include="DB\PeopleDB.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DB\TempReport.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
