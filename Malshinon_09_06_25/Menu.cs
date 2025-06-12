@@ -25,6 +25,10 @@ namespace Malshinon_09_06_25
 
         public Menu()
         { }
+        public void Login()
+        {
+
+        }
         public List<string> SplitBySpace(string fullName)
         {
             string[] parts = fullName.Split(' ');
@@ -158,7 +162,7 @@ namespace Malshinon_09_06_25
         }
         public void startMenu()
         {
-            // יצירת חיבור לנתונים כרגע נוצר חיבור אוטמטי יש צורך במערכת חכמה של סיסמאות ולאיפה להתחבר לשרת
+            //תחילת חיבור לשרת, כרגע לא מבקש שם שרת
             _StartRunCode.Access_TO_DB();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
             Console.WriteLine("║           Welcome to the Suspicious Activity Report System   ║");
@@ -293,7 +297,54 @@ namespace Malshinon_09_06_25
                     adminUsersAcceess(adminUser, passwors, adminList);
                     if (adminUsersAcceess(adminUser, passwors, adminList))
                     {
-                        _StartRunCode.GetTargetStats();
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("══════════════════════════════════════════════");
+                        Console.WriteLine($"        👤 Admin Panel - Welcome {adminUser}");
+                        Console.WriteLine("══════════════════════════════════════════════");
+
+                        // הגדרת צבע לטקסט של התפריט
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("╔════════════════════════════════╗");
+                        Console.WriteLine("║ 📋  Please choose from menu:   ║");
+                        Console.WriteLine("╠════════════════════════════════╣");
+                        Console.WriteLine("║ 1. 👥 Get all users            ║");
+                        Console.WriteLine("║ 2. 📝 Get all reports          ║");
+                        Console.WriteLine("║ 3. 🎯 Get target stats         ║");
+                        Console.WriteLine("║ 4. ❌ Exit                     ║");
+                        Console.WriteLine("╚════════════════════════════════╝");
+
+                        // החזרת הצבע המקורי
+                        Console.ResetColor();
+
+                        Console.Write("\nEnter your choice: ");
+                        string adminChoice = Console.ReadLine();
+                        //בדיקה אם המשתמש בחר באופציה 1
+                        switch (adminChoice)
+                        {
+                            case "1":
+                                //שליפת כל המשתמשים
+                                //_StartRunCode.GetAllUsers();
+                                Console.WriteLine("Not active at the moment");
+                                break;
+                            case "2":
+                                //שליפת כל הדיווחים
+                                //_StartRunCode.GetAllReports();
+                                Console.WriteLine("Not active at the moment");
+                                break;
+                            case "3":
+                                //שליפת הסטטיסטיקות של היעד
+                                _StartRunCode.GetTargetStats();
+                                break;
+                            case "4":
+                                Console.WriteLine("Goodbye!");
+                                Console.WriteLine("Thank you for choosing our service!  😉 ");
+                                boli = false;
+                                break;
+                            default:
+                                Console.WriteLine("Invalid choice. Please select 1, 2, 3, or 4.");
+                                break;
+                        }
+
                     }
                     else
                     {

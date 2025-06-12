@@ -96,7 +96,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAL.cs" />
-    <Compile Include="DB\LogDB.cs" />
     <Compile Include="Menu.cs" />
     <Compile Include="DB\IntelreportsDB.cs" />
     <Compile Include="DB\PeopleDB.cs" />
