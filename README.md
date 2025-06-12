@@ -182,3 +182,40 @@ dotnet run
 ```
 
 Make sure MySQL is active and the database `malshinon` is configured with the correct schema and accessible credentials.
+
+
+---
+
+## 🛡️ Admin Panel
+
+The system includes a dedicated admin interface, allowing management and monitoring of all database activity.
+
+After successful login as an admin, the following menu is presented:
+
+```
+╔════════════════════════════════╗
+║ 📋  Please choose from menu:   ║
+╠════════════════════════════════╣
+║ 1. 👥 Get all users             ║
+║ 2. 📝 Get all reports           ║
+║ 3. 🎯 Get target stats          ║
+║ 4. ❌ Exit                      ║
+╚════════════════════════════════╝
+```
+
+### 🔧 Admin Options:
+
+- **1. Get all users:**  
+  Displays a list of all users in the system (first name, last name, report stats).
+
+- **2. Get all reports:**  
+  Retrieves all submitted reports from the database and displays them in readable format.
+
+- **3. Get target stats:**  
+  Performs a full scan for suspicious activity — checking if any target has received 3+ reports within 15 minutes.  
+  Displays alerts for any such target.
+
+- **4. Exit:**  
+  Returns to the main screen or exits the admin panel.
+
+All admin actions are logged in the system log file for auditing purposes.
