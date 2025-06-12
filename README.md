@@ -9,15 +9,15 @@
 ## 📌 Overview
 
 Malshinon is a console-based community intelligence simulation system.  
-It allows users to log in by name or secret code, report suspicious individuals, and stores all reports in a structured MySQL database. The system analyzes the data and automatically highlights individuals who receive multiple reports within a short time frame.
+It allows users to log in by name or secret code, report suspicious individuals, and stores all reports in a structured MySQL database.  
+The system analyzes the data and automatically highlights individuals who receive multiple reports within a short time frame.  
+All actions are logged in a centralized file.
 
 ---
 
 ## 🧭 System Functionality
 
 ### 🔹 Main Menu
-
-When the application starts, the user is presented with:
 
 ```
 ╔══════════════════════════════╗
@@ -35,32 +35,100 @@ When the application starts, the user is presented with:
 - The user is prompted to enter a free-text report.
 - The system extracts two consecutive capitalized words as the target’s name.
 - If the target exists in the system, a report is saved to the database.
-- Otherwise, an error message is shown.
+- After submitting the report:
+  - The report is saved to `intelreports`.
+  - The target's report count is updated.
+  - The reporter's mention count is updated.
+  - A log entry is created for each action.
 
 #### Option 2: Login by Secret Code
 - The user provides a secret code.
 - If the code exists, the user is identified and welcomed.
 - If not, the system attempts to extract the name from the input and creates a new user.
-- The user is then prompted to enter a free-text report as in Option 1.
+- The user is then prompted to enter a free-text report.
+- The same post-report logic applies as in Option 1.
 
 #### Option 3: Exit
 - Cleanly closes the application.
 
 ---
 
+## 📊 Logging System
+
+All critical system actions are logged to a dedicated file with a timestamp.
+
+The system logs:
+- Successful logins and failed attempts
+- New user registrations
+- Report submissions
+- Updates to `num_reports` and `num_mentions`
+- Detected suspicious activities
+- All system errors (try/catch)
+
+Logs are used both for auditing and debugging purposes.
+
+---
+
 ## 🔍 Report Analysis
 
-After submitting a report, the system:
+After each submitted report, the system:
 - Saves the report with a timestamp in the `intelreports` table.
-- Updates the number of mentions and reports in the `people` table.
-- Checks whether the same target has received 3 or more reports within a 15-minute window.
-- If so, it displays a **red alert box** with report details.
+- Automatically updates:
+  - The number of reports for the target
+  - The number of mentions for the reporter
+- Scans all targets for suspicious behavior:
+  - If 3 or more reports are detected on the same target within a 15-minute window, a red alert is displayed.
+
+---
+
+## ⚙️ Log Configuration
+
+### 📁 Customizing Log File Path
+
+By default, logs are saved to:
+
+```
+logs/log.txt
+```
+
+You can change the log file path dynamically during runtime:
+
+```csharp
+logger.SetLogPath("logs/admin_actions.txt");
+```
+
+This will automatically create the directory and file if they do not exist.
+
+---
+
+### 🧹 Clearing Log File Content
+
+To erase all content in the log file (without deleting the file itself), use:
+
+```csharp
+File.WriteAllText(logger.CurrentLogPath, string.Empty);
+```
+
+Alternatively, add this method to the `Logs` class:
+
+```csharp
+public void ClearLog()
+{
+    File.WriteAllText(CurrentLogPath, string.Empty);
+}
+```
+
+Then you can call:
+
+```csharp
+logger.ClearLog();
+```
 
 ---
 
 ## 🧱 Database Schema
 
-The system requires a MySQL database named `malshinon` with the following schema:
+The system uses a MySQL database named `malshinon` with the following schema:
 
 ```sql
 CREATE DATABASE malshinon;
@@ -99,34 +167,9 @@ CREATE TABLE intelreports (
 | `PeopleDB.cs`       | Model class representing a person in the system. |
 | `IntelreportsDB.cs` | Model class representing a report. |
 | `LogDB.cs`          | Placeholder class for logging system actions. |
+| `Logs.cs`           | Centralized logger for writing actions to file and displaying them. |
 | `TempReport.cs`     | Temporary data structure for holding report data. |
 | `App.config`        | Holds MySQL connection string. |
-
----
-
-## 🚀 Features Summary
-
-- Dual login method (name or secret code)
-- Automatic registration of new users
-- Secret code generation
-- Full name extraction from free-text
-- Report storing and target tracking
-- Suspicious activity detection
-- Colored alert system in console
-
----
-
-## 🧪 Example Alert Output
-
-```
-╔════════════════════════════════════════════╗
-║          ⚠️  ALERT: SUSPICIOUS ACTIVITY    ║
-╠════════════════════════════════════════════╣
-║ 🎯 Target ID     : 6                       ║
-║ 🕒 Time Window   : 10/06/2025 20:22 ➜ 20:37║
-║ 📈 Reports Count : 3                       ║
-╚════════════════════════════════════════════╝
-```
 
 ---
 
