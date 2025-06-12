@@ -36,8 +36,10 @@ namespace Malshinon_09_06_25
             Console.WriteLine("| Connection object created! |");
             Console.WriteLine("|          /!\\               |");
             Console.WriteLine("------------------------------");
-            Logs.login("Connection object created!");
+            //Logs.login("Connection object created!");
         }
+        //public static string login(string action, string username)
+        //{ }
         public bool GetPersonByName(string name, string lastName)
         {
             string query = "SELECT * FROM people WHERE first_name = @first_name AND last_name = @last_name";
