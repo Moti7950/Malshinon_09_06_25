@@ -28,8 +28,7 @@ namespace Malshinon_09_06_25
             //Console.WriteLine(_StartRunCode.GetPersonBySecretCode("E4321"));
             //שים לב בחלק השני מכניסים את שם האיש שמדווח!!
             //_StartRunCode.InsertIntelReport(new IntelreportsDB(3, 6, "Suspicious behavior at the northern gate", DateTime.Now.ToString("yyyy-MM-dd HH:mm")));
-            //_StartRunCode.UpdateReportCount(7);
-            //_StartRunCode.UpdateMentionCount(3);
+           
         }
         public List<string> SplitBySpace(string fullName)
         {
@@ -102,8 +101,6 @@ namespace Malshinon_09_06_25
 
             Console.WriteLine($"Report saved. Target: {firstName} {lastName} (ID: {targetId})");
         }
-
-
         public bool doesTheUserExist(string userExist, string inputUserName)
         {
             //צריך לבדוק איך להכניס נכון את הפרטים בשביל להשתמש במערכות לדוגמא רווח יפריד את השם הפרטי והשם המשפחה
@@ -141,11 +138,33 @@ namespace Malshinon_09_06_25
 
             }
         }
+        public void adminUsersAcceess()
+        {
+            //לקיחת שם משתמש 
+            Console.WriteLine("Please enter your user name:");
+            string userNameInput = Console.ReadLine();
+            //בדיקת הסיסמה
+            Console.WriteLine("Please enter your password:");
+            string passwordInput = Console.ReadLine();
+
+
+        }
         public void startMenu()
         {
             // יצירת חיבור לנתונים כרגע נוצר חיבור אוטמטי יש צורך במערכת חכמה של סיסמאות ולאיפה להתחבר לשרת
             _StartRunCode.Access_TO_DB();
             _StartRunCode.GetTargetStats();
+            Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
+            Console.WriteLine("║           Welcome to the Suspicious Activity Report System   ║");
+            Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
+            Console.WriteLine("║ This system allows you to:                                   ║");
+            Console.WriteLine("║   • Report a suspicious person                               ║");
+            Console.WriteLine("║   • Log in using your secret code                            ║");
+            Console.WriteLine("║   • Or log in using your first and last name                 ║");
+            Console.WriteLine("║   • Create new user profiles                                 ║");
+            Console.WriteLine("║                                                              ║");
+            Console.WriteLine("║       Thank you for choosing our service!                    ║");
+            Console.WriteLine("╚══════════════════════════════════════════════════════════════╝");
             bool boli = true;
             while (boli)
             {
@@ -161,22 +180,47 @@ namespace Malshinon_09_06_25
                 if (typeConect == "3")
                 {
                     Console.WriteLine("Goodbye!");
+                    Console.WriteLine("Thank you for choosing our service! 🙂 ");
                     boli = false;
                 }
                 else if (typeConect == "1")
                 {
-                    Console.WriteLine("Please enter your first and last name: ");
+
+
                     string inputUserName = Console.ReadLine();
+                    List<string> nameParts = SplitBySpace(inputUserName);
+
+                    string firstName = "";
+                    string lastName = "";
+
+                    if (nameParts.Count >= 2)
+                    {
+                        firstName = nameParts[0];
+                        lastName = nameParts[1];
+
+                        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+                        {
+                            Console.WriteLine("Error: Both first and last name must not be empty.");
+                            Console.WriteLine();
+                            Console.WriteLine("Please enter your first name:");
+                            firstName = Console.ReadLine();
+                            Console.WriteLine("Please enter your last name:");
+                            lastName = Console.ReadLine();
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Error: You must enter both first and last name separated by a space.");
+                        Console.WriteLine();
+                        Console.WriteLine("Please enter your first name:");
+                        firstName = Console.ReadLine();
+                        Console.WriteLine("Please enter your last name:");
+                        lastName = Console.ReadLine();
+                    }
+
 
                     if (!doesTheUserExist(typeConect, inputUserName))
                     {
-                        //לא צריך לבצע הדפסה כפולה 
-                        //Console.WriteLine("Please enter your first and last name to create a new user. ");
-                        //string inputUserNameNotExist = Console.ReadLine();
-                        //שימוש במחלקה לחילוק הרשימה לשם פרטי ושם משפחה
-                        List<string> nameParts = SplitBySpace(inputUserName);
-                        string firstName = nameParts[0];
-                        string lastName = nameParts[1];
                         //יצירת המשתמש 
                         PeopleDB craiteNweUser = new PeopleDB(firstName, lastName);
                         //הכנסת המשתמש החדש ל DB 
@@ -184,9 +228,6 @@ namespace Malshinon_09_06_25
                     }
                     else if (doesTheUserExist(typeConect, inputUserName))
                     {
-                        List<string> nameParts = SplitBySpace(inputUserName);
-                        string firstName = nameParts[0];
-                        string lastName = nameParts[1];
 
                         Console.WriteLine($"Welcome {firstName} {lastName}");
 
@@ -197,7 +238,7 @@ namespace Malshinon_09_06_25
 
                         if (string.IsNullOrEmpty(secretCode))
                         {
-                            Console.WriteLine("❌ Could not find your secret code in the system.");
+                            Console.WriteLine("Could not find your secret code in the system.");
                         }
                         else
                         {
@@ -215,7 +256,7 @@ namespace Malshinon_09_06_25
                         List<string> nameParts = SplitBySpace(secretCode);
                         if (nameParts.Count < 2)
                         {
-                            Console.WriteLine("❌ Please enter both first and last name.");
+                            Console.WriteLine("Please enter both first and last name.");
                             return;
                         }
                         string firstName = nameParts[0];
@@ -231,11 +272,11 @@ namespace Malshinon_09_06_25
 
                         if (person == null)
                         {
-                            Console.WriteLine("❌ Could not find a person with this secret code.");
+                            Console.WriteLine("Could not find a person with this secret code.");
                         }
                         else
                         {
-                            Console.WriteLine($"✅ Welcome back, {person.Value.FirstName} {person.Value.LastName}!");
+                            Console.WriteLine($"Welcome back, {person.Value.FirstName} {person.Value.LastName}!");
                             HandleAndSendReport(secretCode);
                         }
                     }
