@@ -36,6 +36,7 @@ namespace Malshinon_09_06_25
             Console.WriteLine("| Connection object created! |");
             Console.WriteLine("|          /!\\               |");
             Console.WriteLine("------------------------------");
+            Logs.login("Connection object created!");
         }
         public bool GetPersonByName(string name, string lastName)
         {
@@ -201,14 +202,19 @@ namespace Malshinon_09_06_25
 
                         if (countInWindow >= 3)
                         {
-                            if (!targetPrinted) // נדפיס רק פעם אחת לכל יעד
+                            if (!targetPrinted)
                             {
-                                Console.WriteLine("════════════════════════════════════════");
-                                Console.WriteLine("⚠️  ALERT: High Activity Detected!");
-                                Console.WriteLine($"🎯 Target ID      : {targetId}");
-                                Console.WriteLine($"🕒 Time Window    : {windowStart:dd/MM/yyyy HH:mm} ➜ {windowStart.AddMinutes(15):HH:mm}");
-                                Console.WriteLine($"📈 Reports Count  : {countInWindow}");
-                                Console.WriteLine("════════════════════════════════════════\n");
+                                Console.ForegroundColor = ConsoleColor.Red;
+
+                                Console.WriteLine("╔════════════════════════════════════════════╗");
+                                Console.WriteLine("║          ⚠️  ALERT: SUSPICIOUS ACTIVITY    ║");
+                                Console.WriteLine("╠════════════════════════════════════════════╣");
+                                Console.WriteLine($"║ 🎯 Target ID     : {targetId,-24}║");
+                                Console.WriteLine($"║ 🕒 Time Window   : {windowStart:dd/MM/yyyy HH:mm} ➜ {windowStart.AddMinutes(15):HH:mm}║");
+                                Console.WriteLine($"║ 📈 Reports Count : {countInWindow,-24}║");
+                                Console.WriteLine("╚════════════════════════════════════════════╝\n");
+
+                                Console.ResetColor();
                                 anySuspicious = true;
                                 targetPrinted = true;
                             }
@@ -218,12 +224,12 @@ namespace Malshinon_09_06_25
 
                 if (!anySuspicious)
                 {
-                    Console.WriteLine("✅ No suspicious target activity detected within 15-minute windows.");
+                    Console.WriteLine("No suspicious target activity detected within 15-minute windows.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("שגיאה בניתוח מטרות: " + ex.Message);
+                Console.WriteLine("Erorr: " + ex.Message);
             }
             finally
             {
@@ -439,7 +445,7 @@ namespace Malshinon_09_06_25
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("❌ Error: " + ex.Message);
+                    Console.WriteLine("Error: " + ex.Message);
                 }
                 finally
                 {
