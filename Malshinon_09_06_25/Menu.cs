@@ -10,6 +10,7 @@ namespace Malshinon_09_06_25
     internal class Menu
     {
         private DAL _StartRunCode = new DAL("malshinon");
+        private static Logs logger = new Logs();
 
         private Dictionary<string, string> adminList = new Dictionary<string, string>
         {
@@ -23,12 +24,6 @@ namespace Malshinon_09_06_25
                    word.Skip(1).All(c => char.IsLower(c) || !char.IsLetter(c));
         }
 
-        public Menu()
-        { }
-        public void Login()
-        {
-
-        }
         public List<string> SplitBySpace(string fullName)
         {
             string[] parts = fullName.Split(' ');
@@ -101,6 +96,8 @@ namespace Malshinon_09_06_25
                 text,
                 DateTime.Now.ToString("yyyy-MM-dd HH:mm")
             ));
+            _StartRunCode.UpdateReportCount(targetId);
+            _StartRunCode.UpdateMentionCount(reporterId);
 
             Console.WriteLine($"Report saved. Target: {firstName} {lastName} (ID: {targetId})");
         }
@@ -147,6 +144,7 @@ namespace Malshinon_09_06_25
             {
                 if (usersDict[adminUser] == password)
                 {
+                    logger.WriteLog("🔐 Admin logged in.");
                     return true;
                 }
                 else
@@ -307,10 +305,11 @@ namespace Malshinon_09_06_25
                         Console.WriteLine("╔════════════════════════════════╗");
                         Console.WriteLine("║ 📋  Please choose from menu:   ║");
                         Console.WriteLine("╠════════════════════════════════╣");
-                        Console.WriteLine("║ 1. 👥 Get all users            ║");
-                        Console.WriteLine("║ 2. 📝 Get all reports          ║");
-                        Console.WriteLine("║ 3. 🎯 Get target stats         ║");
-                        Console.WriteLine("║ 4. ❌ Exit                     ║");
+                        Console.WriteLine("║ 1. 👥 Get all users.           ║");
+                        Console.WriteLine("║ 2. 📝 Get all reports.         ║");
+                        Console.WriteLine("║ 3. 🎯 Get target stats.        ║");
+                        Console.WriteLine("║ 4. 📜 Get Logs.                ║");
+                        Console.WriteLine("║ 5. ❌ Exit.                    ║");
                         Console.WriteLine("╚════════════════════════════════╝");
 
                         // החזרת הצבע המקורי
@@ -336,6 +335,11 @@ namespace Malshinon_09_06_25
                                 _StartRunCode.GetTargetStats();
                                 break;
                             case "4":
+                                //שליפת כל הלוגים
+                                Logs logs = new Logs();
+                                logs.PrintAllLogs();
+                                break;
+                            case "5":
                                 Console.WriteLine("Goodbye!");
                                 Console.WriteLine("Thank you for choosing our service!  😉 ");
                                 boli = false;

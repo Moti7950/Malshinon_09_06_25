@@ -21,5 +21,6 @@ namespace Malshinon_09_06_25
             this.timestamp = timestamp;
 
         }
+
     }
 }
