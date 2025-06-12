@@ -15,6 +15,8 @@ namespace Malshinon_09_06_25
     internal class DAL
     {
         private MySqlConnection _conn;
+        
+        private static Logs logger = new Logs();
         public string DBName { get; private set; }
         public string server { get; private set; }
         public string user { get; private set; }
@@ -36,7 +38,7 @@ namespace Malshinon_09_06_25
             Console.WriteLine("| Connection object created! |");
             Console.WriteLine("|          /!\\               |");
             Console.WriteLine("------------------------------");
-            Logs.login("Connection object created!");
+            logger.WriteLog("🔌 Database connection object created");
         }
         public bool GetPersonByName(string name, string lastName)
         {
@@ -51,17 +53,19 @@ namespace Malshinon_09_06_25
                 {
                     if (reader.Read())
                     {
+                        logger.WriteLog($"✅ User found by name: {name} {lastName}");
                         return true;
                     }
                     else
                     {
+                        logger.WriteLog($"❌ User not found by name: {name} {lastName}");
                         return false;
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Catch" + e.Message);
+                logger.WriteLog($"❗ Error in GetPersonByName: {e.Message}");
                 return false;
             }
             finally
@@ -75,6 +79,7 @@ namespace Malshinon_09_06_25
             string query = "SELECT first_name, last_name FROM people WHERE secret_code = @secret_code";
             try
             {
+
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
 
@@ -85,19 +90,22 @@ namespace Malshinon_09_06_25
                 {
                     if (reader.Read())
                     {
+                        logger.WriteLog($"✅ User found by secret code: {secret_code}");
                         string firstName = reader.GetString("first_name");
                         string lastName = reader.GetString("last_name");
                         return (firstName, lastName);
                     }
                     else
                     {
-                        return null; // לא נמצא משתמש עם הקוד הזה
+                        logger.WriteLog($"❌ No user found with secret code: {secret_code}");
+                        return null;
                     }
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("❌ Error: " + e.Message);
+                logger.WriteLog($"❗ Error in GetPersonBySecretCode: {e.Message}");
                 return null;
             }
             finally
@@ -360,6 +368,7 @@ namespace Malshinon_09_06_25
                "VALUES (@first_name, @last_name, @secret_code, @num_mentions, @num_reports, @type)";
             try
             {
+
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
 
@@ -374,10 +383,20 @@ namespace Malshinon_09_06_25
 
                 int rowsAffected = cmd.ExecuteNonQuery();
 
-                Console.WriteLine(rowsAffected > 0 ? "Success" : "Not added");
+                if (rowsAffected > 0)
+                {
+                    Console.WriteLine("Success");
+                    logger.WriteLog($"✅ New person inserted: {addPerson.first_name} {addPerson.last_name}");
+                }
+                else
+                {
+                    Console.WriteLine("Not added");
+                    logger.WriteLog($"❌ Failed to insert new person: {addPerson.first_name} {addPerson.last_name}");
+                }
             }
             catch (Exception ex)
             {
+                logger.WriteLog($"❗ Error in InsertNewPerson: {ex.Message}");
                 Console.WriteLine("Erorr " + ex.Message);
             }
             finally
@@ -403,11 +422,21 @@ namespace Malshinon_09_06_25
 
                 int rowsAffected = cmd.ExecuteNonQuery();
 
-                Console.WriteLine(rowsAffected > 0 ? "Success" : "Not added");
+                if (rowsAffected > 0)
+                {
+                    Console.WriteLine("Report inserted successfully");
+                    logger.WriteLog($"📤 New intel report inserted by Reporter ID {addIntel.reporter_id} for Target ID {addIntel.target_id}");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to insert intel report");
+                    logger.WriteLog("Failed to insert intel report");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Erorr " + ex.Message);
+                logger.WriteLog($"❗ Error in InsertIntelReport: {ex.Message}");
             }
             finally
             {
@@ -422,6 +451,9 @@ namespace Malshinon_09_06_25
                                 WHERE id = @targetId";
                 try
                 {
+                    
+                    
+                    
                     if (_conn.State != ConnectionState.Open)
                         _conn.Open();
 
@@ -434,18 +466,21 @@ namespace Malshinon_09_06_25
                         Console.WriteLine("╔══════════════════════════════════════╗");
                         Console.WriteLine("║      Report count updated!!          ║");
                         Console.WriteLine("╚══════════════════════════════════════╝");
+                        logger.WriteLog($"📊 Report count updated for Target ID {targetId}");
                     }
                     else
                     {
                         Console.WriteLine("╔══════════════════════════════════════╗");
                         Console.WriteLine("║      No reports found to update /!\\  ║");
                         Console.WriteLine("╚══════════════════════════════════════╝");
+                        logger.WriteLog($"⚠️ No reports found to update for Target ID {targetId}");
                     }
 
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Error: " + ex.Message);
+                    logger.WriteLog($"❗ Error in UpdateReportCount: {ex.Message}");
                 }
                 finally
                 {
@@ -461,6 +496,9 @@ namespace Malshinon_09_06_25
                             ";
             try
             {
+                
+                
+                
                 if (_conn.State != ConnectionState.Open)
                     _conn.Open();
 
@@ -473,17 +511,20 @@ namespace Malshinon_09_06_25
                     Console.WriteLine("╔══════════════════════════════════════╗");
                     Console.WriteLine("║      Mention counts updated!!        ║");
                     Console.WriteLine("╚══════════════════════════════════════╝");
+                    logger.WriteLog($"📣 Mention count updated for Reporter ID {reporterId}");
                 }
                 else
                 {
                     Console.WriteLine("╔══════════════════════════════════════╗");
                     Console.WriteLine("║     No mentions found to update /!\\  ║");
                     Console.WriteLine("╚══════════════════════════════════════╝");
+                    logger.WriteLog($"⚠️ No mentions found to update for Reporter ID {reporterId}");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
+                logger.WriteLog($"❗ Error in UpdateMentionCount: {ex.Message}");
             }
             finally
             {

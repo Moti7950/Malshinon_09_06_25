@@ -9,27 +9,21 @@ namespace Malshinon_09_06_25
 {
     internal class Menu
     {
-
         private DAL _StartRunCode = new DAL("malshinon");
-        private bool IsCapitalized(string word)
+        private static Logs logger = new Logs();
+
+        private Dictionary<string, string> adminList = new Dictionary<string, string>
+        {
+            { "admin", "admin" }, // דוגמה למשתמש אדמין
+            // ניתן להוסיף משתמשים נוספים כאן
+        };
+    private bool IsCapitalized(string word)
         {
             return !string.IsNullOrEmpty(word) &&
                    char.IsUpper(word[0]) &&
                    word.Skip(1).All(c => char.IsLower(c) || !char.IsLetter(c));
         }
 
-        public Menu()
-        {
-            //Console.WriteLine(_StartRunCode.GetPersonByName("David", "Levi"));
-            //Console.WriteLine(_StartRunCode.GetPersonBySecretCode("EB111"));
-            //_StartRunCode.GetReporterStats();
-            //Console.WriteLine(_StartRunCode.GetPersonBySecretCode("DM999"));
-            //_StartRunCode.InsertNewPerson(new PeopleDB("Shira", "Goldstein", "E4321", 0, 0));
-            //Console.WriteLine(_StartRunCode.GetPersonBySecretCode("E4321"));
-            //שים לב בחלק השני מכניסים את שם האיש שמדווח!!
-            //_StartRunCode.InsertIntelReport(new IntelreportsDB(3, 6, "Suspicious behavior at the northern gate", DateTime.Now.ToString("yyyy-MM-dd HH:mm")));
-           
-        }
         public List<string> SplitBySpace(string fullName)
         {
             string[] parts = fullName.Split(' ');
@@ -38,6 +32,7 @@ namespace Malshinon_09_06_25
 
             return new List<string> { firstName, lastName };
         }
+        //הפונקציה הזו מקבלת קובץ טקסט ומחלצת את השם לפי אות גדולה שים לב שהתרגום רק לשפה העברית
         public List<string> ExtractFullNameFromText(string text)
         {
             string[] words = text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -71,7 +66,7 @@ namespace Malshinon_09_06_25
             // בדיקה אם הצלחנו לחלץ שם
             if (string.IsNullOrEmpty(firstName) || string.IsNullOrEmpty(lastName))
             {
-                Console.WriteLine("❌ Could not extract a full name from the report.");
+                Console.WriteLine("Could not extract a full name from the report.");
                 return;
             }
 
@@ -81,13 +76,16 @@ namespace Malshinon_09_06_25
 
             if (reporterId == -1)
             {
-                Console.WriteLine("❌ Reporter not found.");
+                Console.WriteLine("User not found.");
+                Console.WriteLine(" No user found create a new user");
+                PeopleDB createA_TemporaryUser = new PeopleDB(firstName, lastName);
+                _StartRunCode.InsertNewPerson(createA_TemporaryUser);
                 return;
             }
 
             if (targetId == -1)
             {
-                Console.WriteLine($"❌ Target '{firstName} {lastName}' not found.");
+                Console.WriteLine($"Target '{firstName} {lastName}' not found.");
                 return;
             }
 
@@ -98,6 +96,8 @@ namespace Malshinon_09_06_25
                 text,
                 DateTime.Now.ToString("yyyy-MM-dd HH:mm")
             ));
+            _StartRunCode.UpdateReportCount(targetId);
+            _StartRunCode.UpdateMentionCount(reporterId);
 
             Console.WriteLine($"Report saved. Target: {firstName} {lastName} (ID: {targetId})");
         }
@@ -138,22 +138,30 @@ namespace Malshinon_09_06_25
 
             }
         }
-        public void adminUsersAcceess()
+        public static bool adminUsersAcceess(string adminUser, string password,Dictionary<string,string> usersDict)
         {
-            //לקיחת שם משתמש 
-            Console.WriteLine("Please enter your user name:");
-            string userNameInput = Console.ReadLine();
-            //בדיקת הסיסמה
-            Console.WriteLine("Please enter your password:");
-            string passwordInput = Console.ReadLine();
-
+            if (usersDict.ContainsKey(adminUser))
+            {
+                if (usersDict[adminUser] == password)
+                {
+                    logger.WriteLog("🔐 Admin logged in.");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
 
         }
         public void startMenu()
         {
-            // יצירת חיבור לנתונים כרגע נוצר חיבור אוטמטי יש צורך במערכת חכמה של סיסמאות ולאיפה להתחבר לשרת
+            //תחילת חיבור לשרת, כרגע לא מבקש שם שרת
             _StartRunCode.Access_TO_DB();
-            _StartRunCode.GetTargetStats();
             Console.WriteLine("╔══════════════════════════════════════════════════════════════╗");
             Console.WriteLine("║           Welcome to the Suspicious Activity Report System   ║");
             Console.WriteLine("╠══════════════════════════════════════════════════════════════╣");
@@ -172,21 +180,15 @@ namespace Malshinon_09_06_25
                 Console.WriteLine(" ║  Please select your choce    ║");
                 Console.WriteLine(" ║          1. name:            ║");
                 Console.WriteLine(" ║          2. secret code:     ║");
-                Console.WriteLine(" ║          3. Exit:            ║");
+                Console.WriteLine(" ║          3. Admin Access:    ║");
+                Console.WriteLine(" ║          4. Exit:            ║");
                 Console.WriteLine(" ╚══════════════════════════════╝");
 
                 string typeConect = Console.ReadLine();
-
-                if (typeConect == "3")
+                //בדיקה אם המשתמש קיים במערכת לפי השם הפרטי והשם משפחה שלו
+                if (typeConect == "1")
                 {
-                    Console.WriteLine("Goodbye!");
-                    Console.WriteLine("Thank you for choosing our service! 🙂 ");
-                    boli = false;
-                }
-                else if (typeConect == "1")
-                {
-
-
+                    Console.WriteLine("Please enter your first and last name separated by a space: ");
                     string inputUserName = Console.ReadLine();
                     List<string> nameParts = SplitBySpace(inputUserName);
 
@@ -208,6 +210,7 @@ namespace Malshinon_09_06_25
                             lastName = Console.ReadLine();
                         }
                     }
+
                     else
                     {
                         Console.WriteLine("Error: You must enter both first and last name separated by a space.");
@@ -217,8 +220,7 @@ namespace Malshinon_09_06_25
                         Console.WriteLine("Please enter your last name:");
                         lastName = Console.ReadLine();
                     }
-
-
+                    //במקרה שהמשתמש לא קיים במערכת
                     if (!doesTheUserExist(typeConect, inputUserName))
                     {
                         //יצירת המשתמש 
@@ -226,15 +228,16 @@ namespace Malshinon_09_06_25
                         //הכנסת המשתמש החדש ל DB 
                         _StartRunCode.InsertNewPerson(craiteNweUser);
                     }
+                    //במקרה שהמשתמש קיים במערכת
                     else if (doesTheUserExist(typeConect, inputUserName))
                     {
-
                         Console.WriteLine($"Welcome {firstName} {lastName}");
 
+                        Console.WriteLine("Hi test ");
                         // שליפת הקוד הסודי של המשתמש מתוך ה-DB
                         string secretCode = _StartRunCode.GetSecretCodeByName(firstName, lastName);
-                        //_StartRunCode.UpdateReportCount();
-                        //_StartRunCode.UpdateMentionCount();
+
+                        Console.WriteLine(secretCode);
 
                         if (string.IsNullOrEmpty(secretCode))
                         {
@@ -246,6 +249,7 @@ namespace Malshinon_09_06_25
                         }
                     }
                 }
+                //בדיקה אם המשתמש קיים במערכת לפי הקוד הסודי שלו
                 else if (typeConect == "2")
                 {
                     Console.WriteLine("Please enter your secret code:");
@@ -281,6 +285,84 @@ namespace Malshinon_09_06_25
                         }
                     }
                 }
+                //תפריט של מנהל
+                else if (typeConect == "3")
+                {
+                    Console.WriteLine("Please enter your Admin user: ");
+                    string adminUser = Console.ReadLine();
+                    Console.WriteLine("Please enter your Admin password: ");
+                    string passwors = Console.ReadLine();
+                    adminUsersAcceess(adminUser, passwors, adminList);
+                    if (adminUsersAcceess(adminUser, passwors, adminList))
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.WriteLine("══════════════════════════════════════════════");
+                        Console.WriteLine($"        👤 Admin Panel - Welcome {adminUser}");
+                        Console.WriteLine("══════════════════════════════════════════════");
+
+                        // הגדרת צבע לטקסט של התפריט
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("╔════════════════════════════════╗");
+                        Console.WriteLine("║ 📋  Please choose from menu:   ║");
+                        Console.WriteLine("╠════════════════════════════════╣");
+                        Console.WriteLine("║ 1. 👥 Get all users.           ║");
+                        Console.WriteLine("║ 2. 📝 Get all reports.         ║");
+                        Console.WriteLine("║ 3. 🎯 Get target stats.        ║");
+                        Console.WriteLine("║ 4. 📜 Get Logs.                ║");
+                        Console.WriteLine("║ 5. ❌ Exit.                    ║");
+                        Console.WriteLine("╚════════════════════════════════╝");
+
+                        // החזרת הצבע המקורי
+                        Console.ResetColor();
+
+                        Console.Write("\nEnter your choice: ");
+                        string adminChoice = Console.ReadLine();
+                        //בדיקה אם המשתמש בחר באופציה 1
+                        switch (adminChoice)
+                        {
+                            case "1":
+                                //שליפת כל המשתמשים
+                                //_StartRunCode.GetAllUsers();
+                                Console.WriteLine("Not active at the moment");
+                                break;
+                            case "2":
+                                //שליפת כל הדיווחים
+                                //_StartRunCode.GetAllReports();
+                                Console.WriteLine("Not active at the moment");
+                                break;
+                            case "3":
+                                //שליפת הסטטיסטיקות של היעד
+                                _StartRunCode.GetTargetStats();
+                                break;
+                            case "4":
+                                //שליפת כל הלוגים
+                                Logs logs = new Logs();
+                                logs.PrintAllLogs();
+                                break;
+                            case "5":
+                                Console.WriteLine("Goodbye!");
+                                Console.WriteLine("Thank you for choosing our service!  😉 ");
+                                boli = false;
+                                break;
+                            default:
+                                Console.WriteLine("Invalid choice. Please select 1, 2, 3, or 4.");
+                                break;
+                        }
+
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid admin credentials.");
+                    }
+                }
+                //כרגע לא יצרתי את המערכת של האדמין כי אין לי צורך בה
+                else if (typeConect == "4")
+                {
+                    Console.WriteLine("Goodbye!");
+                    Console.WriteLine("Thank you for choosing our service!  😉 ");
+                    boli = false;
+                }
+                //בדיקה אם המשתמש הכניס ערך לא תקין
                 else
                 {
                     Console.WriteLine("Invalid choice. Please select 1, 2, or 3.");
